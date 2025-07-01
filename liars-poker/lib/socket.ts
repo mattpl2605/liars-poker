@@ -9,10 +9,8 @@ let socket: Socket | null = null;
 
 export function getSocket() {
   if (!socket && URL) {
-    socket = io(URL, {
-      transports: ['websocket', 'polling'], // allow polling handshake, then upgrade
-      secure: true                          // wss:// when URL is https
-    });
+    // No 'transports' array -> default = polling, then it upgrades to WS
+    socket = io(URL, { secure: true });
   }
   return socket;
 }
