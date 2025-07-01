@@ -17,10 +17,23 @@ const FRONTEND_ORIGIN =
 const app = express();
 const server = http.createServer(app);
 
+// Helper to evaluate if a request origin is allowed
+const corsOriginFn = (origin, callback) => {
+  // Allow requests with no origin (like mobile apps or curl)
+  if (!origin) return callback(null, true);
+  const allowed =
+    origin === FRONTEND_ORIGIN || // explicit env origin
+    /\.vercel\.app$/.test(origin); // any Vercel preview/production domain
+  if (allowed) {
+    return callback(null, true);
+  }
+  return callback(new Error('Not allowed by CORS'));
+};
+
 /* 2️⃣  Socket.IO CORS */
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_ORIGIN,       // 👈 explicit origin
+    origin: corsOriginFn,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -29,7 +42,7 @@ const io = new Server(server, {
 /* 3️⃣  Express CORS (for GET / health-check) */
 app.use(
   cors({
-    origin: FRONTEND_ORIGIN,       // 👈 same origin
+    origin: corsOriginFn,
     methods: ['GET', 'POST'],
     credentials: true
   })
