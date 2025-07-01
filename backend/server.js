@@ -3,14 +3,37 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
+/* 1️⃣  FRONT-END ORIGIN
+   -------------------------------------------------
+   • in production you'll set FRONTEND_ORIGIN
+     on Railway → Variables (value = your Vercel URL)
+   • when you run locally it falls back to localhost:3000
+*/
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+
+/* ------------------------------------------------- */
+
 const app = express();
 const server = http.createServer(app);
+
+/* 2️⃣  Socket.IO CORS */
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: FRONTEND_ORIGIN,       // 👈 explicit origin
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
+
+/* 3️⃣  Express CORS (for GET / health-check) */
+app.use(
+  cors({
+    origin: FRONTEND_ORIGIN,       // 👈 same origin
+    methods: ['GET', 'POST'],
+    credentials: true
+  })
+);
 
 const PORT = process.env.PORT || 4000;
 
@@ -546,7 +569,6 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(cors());
 app.get('/', (req, res) => {
   res.send('Liar\'s Poker Socket.IO server running');
 });
