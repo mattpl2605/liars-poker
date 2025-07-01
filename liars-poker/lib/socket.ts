@@ -9,7 +9,11 @@ let socket: Socket | null = null;
 
 export function getSocket() {
   if (!socket && URL) {
-    socket = io(URL, { transports: ['websocket'] });
+   socket = io(URL, { transports: ['websocket'] });   // <- too strict
+   socket = io(URL, {
+     transports: ['websocket', 'polling'], // allow fallback, then upgrade
+     secure: true                          // tells client to use wss://
+   });
   }
   return socket;
-} 
+}
