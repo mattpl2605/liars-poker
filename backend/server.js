@@ -33,9 +33,10 @@ const corsOriginFn = (origin, callback) => {
 /* 2️⃣  Socket.IO CORS */
 const io = new Server(server, {
   cors: {
-    origin: corsOriginFn,
-    methods: ['GET', 'POST'],
-    credentials: true
+    origin: "*", // Temporarily allow all origins for debugging
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   }
 });
 
@@ -43,10 +44,21 @@ const io = new Server(server, {
 app.use(
   cors({
     origin: corsOriginFn,
-    methods: ['GET', 'POST'],
-    credentials: true
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
+
+// Additional CORS headers for Socket.IO
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Max-Age", "1800");
+  res.setHeader("Access-Control-Allow-Headers", "content-type, authorization");
+  res.setHeader("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, PATCH, OPTIONS");
+  next();
+});
 
 const PORT = process.env.PORT || 4000;
 
@@ -583,7 +595,22 @@ io.on('connection', (socket) => {
 });
 
 app.get('/', (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Max-Age", "1800");
+  res.setHeader("Access-Control-Allow-Headers", "content-type, authorization");
+  res.setHeader("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, PATCH, OPTIONS");
   res.send('Liar\'s Poker Socket.IO server running');
+});
+
+// Add a specific Socket.IO health check endpoint
+app.get('/socket.io/', (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Max-Age", "1800");
+  res.setHeader("Access-Control-Allow-Headers", "content-type, authorization");
+  res.setHeader("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, PATCH, OPTIONS");
+  res.json({ status: 'Socket.IO server is running' });
 });
 
 // tell Node to bind on **all** interfaces
