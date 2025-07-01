@@ -586,6 +586,7 @@ app.get('/', (req, res) => {
   res.send('Liar\'s Poker Socket.IO server running');
 });
 
-server.listen(PORT, () => {
+// tell Node to bind on **all** interfaces
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 }); 
