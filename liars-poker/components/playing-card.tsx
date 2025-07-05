@@ -1,25 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 interface PlayingCardProps {
   suit: string
   rank: string
   isRevealed?: boolean
+  highlighted?: boolean
 }
 
-export function PlayingCard({ suit, rank, isRevealed = true }: PlayingCardProps) {
-  const [shouldFlip, setShouldFlip] = useState(isRevealed)
+export function PlayingCard({ suit, rank, isRevealed = true, highlighted = false }: PlayingCardProps) {
+  const [isFlipped, setIsFlipped] = useState(isRevealed)
+  const prevRevealed = useRef(isRevealed)
 
+  // When card transitions from hidden -> revealed, set flipped after slight delay to kick CSS transition
   useEffect(() => {
-    if (isRevealed !== shouldFlip) {
-      // Small delay to make the flip more noticeable
-      const timer = setTimeout(() => {
-        setShouldFlip(isRevealed)
-      }, 50)
-      return () => clearTimeout(timer)
+    if (!prevRevealed.current && isRevealed) {
+      const timeout = setTimeout(() => setIsFlipped(true), 20)
+      return () => clearTimeout(timeout)
     }
-  }, [isRevealed, shouldFlip])
+    prevRevealed.current = isRevealed
+  }, [isRevealed])
 
   const getSuitSymbol = (suit: string) => {
     switch (suit) {
@@ -40,20 +41,22 @@ export function PlayingCard({ suit, rank, isRevealed = true }: PlayingCardProps)
     return suit === "hearts" || suit === "diamonds" ? "text-red-500" : "text-black"
   }
 
+  const borderColor = highlighted ? "border-orange-400" : "border-gray-300"
+
   return (
-    <div className="card-container w-16 h-24">
-      <div className={`card-inner ${shouldFlip ? "flipped" : ""}`}>
+    <div className="card-container w-10 h-16">
+      <div className={`card-inner ${isFlipped ? "flipped" : ""}`}>
         {/* Card Back - shows when NOT flipped */}
-        <div className="card-front bg-red-600 flex items-center justify-center border-2 border-gray-300 shadow-lg">
-          <div className="w-8 h-8 border-2 border-white rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 border border-white rounded-full" />
+        <div className={`card-front bg-red-600 flex items-center justify-center border-2 ${borderColor} shadow-lg`}>
+          <div className="w-5 h-5 border-2 border-white rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 border border-white rounded-full" />
           </div>
         </div>
 
         {/* Card Front - shows when flipped */}
-        <div className="card-back bg-white flex flex-col items-center justify-center border-2 border-gray-300 shadow-lg">
-          <div className={`text-2xl font-bold ${getSuitColor(suit)}`}>{rank}</div>
-          <div className={`text-2xl ${getSuitColor(suit)}`}>{getSuitSymbol(suit)}</div>
+        <div className={`card-back bg-white flex flex-col items-center justify-center border-2 ${borderColor} shadow-lg`}>
+          <div className={`text-lg font-bold ${getSuitColor(suit)}`}>{rank}</div>
+          <div className={`text-lg ${getSuitColor(suit)}`}>{getSuitSymbol(suit)}</div>
         </div>
       </div>
     </div>

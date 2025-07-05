@@ -45,6 +45,9 @@ export default function Home() {
 
   const createGame = () => {
     if (!playerName.trim() || !socket) return
+    if (!socket.connected) {
+      socket.connect()
+    }
     socket.emit("createGame", { playerName }, (res: any) => {
       if (res.error) {
         setError(res.error)
@@ -59,6 +62,9 @@ export default function Home() {
 
   const joinGame = () => {
     if (!playerName.trim() || !gameCode.trim() || !socket) return
+    if (!socket.connected) {
+      socket.connect()
+    }
     socket.emit("joinGame", { gameCode, playerName }, (res: any) => {
       if (res.error) {
         setError(res.error)
@@ -75,7 +81,13 @@ export default function Home() {
     if (socket) socket.emit("startGame", { gameCode })
   }
 
+  const returnToLobby = () => {
+    setLiveGameState(null);
+    setGameState("lobby");
+  }
+
   const leaveGame = () => {
+    if(socket) socket.disconnect();
     setGameState("onboarding")
     setPlayerName("")
     setGameCode("")
@@ -184,8 +196,8 @@ export default function Home() {
   }
 
   if (gameState === "playing") {
-    return <GameInterface playerName={playerName} gameCode={gameCode} onLeaveGame={leaveGame} gameState={liveGameState} />
+    return <GameInterface socket={socket} playerName={playerName} gameCode={gameCode} onLeaveGame={leaveGame} onReturnToLobby={returnToLobby} gameState={liveGameState} />
   }
 
-  return <GameInterface playerName={playerName} gameCode={gameCode} onLeaveGame={leaveGame} />
+  return <GameInterface socket={socket} playerName={playerName} gameCode={gameCode} onLeaveGame={leaveGame} onReturnToLobby={returnToLobby} />
 }
