@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useMemo } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PlayingCard } from "@/components/playing-card"
 // Icons removed per plain text requirement
 import { Player } from "@/types"
+import { ClaimString } from "./ui/claim-string"
 
 interface BSRevealProps {
   players: Player[]
@@ -283,13 +283,13 @@ export function BSReveal({ players, communityCards, revealedBoardFlags, currentC
                 </div>
 
                 <div className="text-sm text-gray-300">
-                  Claimed: <strong>{currentClaim}</strong>
+                  Claimed: <strong><ClaimString text={currentClaim} /></strong>
                 </div>
 
                 <div className="text-sm text-gray-300">
                   {claimValid
-                    ? `The claimed ${currentClaim} does not exist. The claimer gets an extra card.`
-                    : `The claimed ${currentClaim} exists. The BS caller gets an extra card.`}
+                    ? <>The claimed <ClaimString text={currentClaim} /> does not exist. The claimer gets an extra card.</>
+                    : <>The claimed <ClaimString text={currentClaim} /> exists. The BS caller gets an extra card.</>}
                 </div>
 
                 {canAck && !autoCompleteAfterMS && (

@@ -109,12 +109,12 @@ export default function Home() {
             <div className="flex gap-1">
               {/* Ace of Spades */}
               <div className="w-12 h-16 bg-white rounded transform rotate-12 shadow-lg flex flex-col items-center justify-center border-2 border-gray-300">
-                <div className="text-lg font-bold text-black">A</div>
+                <div className="text-lg font-bold text-black uppercase">A</div>
                 <div className="text-lg text-black">♠</div>
               </div>
               {/* Ace of Hearts */}
               <div className="w-12 h-16 bg-white rounded transform -rotate-12 shadow-lg flex flex-col items-center justify-center border-2 border-gray-300">
-                <div className="text-lg font-bold text-red-500">A</div>
+                <div className="text-lg font-bold text-red-500 uppercase">A</div>
                 <div className="text-lg text-red-500">♥</div>
               </div>
             </div>

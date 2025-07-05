@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { X, TrendingUp, TrendingDown } from "lucide-react"
+import { ClaimString } from "./ui/claim-string"
 
 const POKER_HANDS = ["High Card", "Pair", "Two Pair", "Three of a Kind", "Flush", "Straight", "Full House", "Four of a Kind", "Straight Flush", "Royal Flush"] as const
 const RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"] as const
@@ -223,7 +224,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
     {currentClaim && (
         <div className="slide-up-1 text-center">
             <div className="text-xs text-gray-400">Beat</div>
-            <div className="text-sm font-semibold text-yellow-400">{currentClaim}</div>
+            <div className="text-sm font-semibold text-yellow-400"><ClaimString text={currentClaim} /></div>
         </div>
     )}
 

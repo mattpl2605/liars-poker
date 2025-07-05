@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft } from "lucide-react"
@@ -10,9 +10,12 @@ import { getSocket } from "@/lib/socket"
 import type { GameState, Player } from "@/types"
 import { HandSelector } from "./hand-selector"
 import { GameEndScreen } from "./game-end-screen"
+import { ClaimString } from "./ui/claim-string"
 
 // Local extension to include placement for end-of-game rankings
-interface RankedPlayer extends Player { placement: number }
+interface RankedPlayer extends Player {
+  placement: number
+}
 
 export interface GameInterfaceProps {
   socket: any
@@ -201,7 +204,9 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
           <div className={`flex justify-center mb-8`}>
             <div className="bg-gray-800 rounded-lg p-3 min-w-[200px] text-center border-2 border-green-500">
               <div className="text-gray-400 text-xs mb-1">Current Claim</div>
-              <div className="text-white text-lg font-bold">{gameState.currentClaim}</div>
+              <div className="text-white text-lg font-bold">
+                <ClaimString text={gameState.currentClaim} />
+              </div>
             </div>
           </div>
         )}

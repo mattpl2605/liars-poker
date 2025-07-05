@@ -55,7 +55,7 @@ export function PlayingCard({ suit, rank, isRevealed = true, highlighted = false
 
         {/* Card Front - shows when flipped */}
         <div className={`card-back bg-white flex flex-col items-center justify-center border-2 ${borderColor} shadow-lg`}>
-          <div className={`text-lg font-bold ${getSuitColor(suit)}`}>{rank}</div>
+          <div className={`text-lg font-bold ${getSuitColor(suit)} uppercase`}>{rank}</div>
           <div className={`text-lg ${getSuitColor(suit)}`}>{getSuitSymbol(suit)}</div>
         </div>
       </div>
