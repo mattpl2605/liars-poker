@@ -102,7 +102,7 @@ export function GameEndScreen({ players, gameCode, onPlayAgain, onReturnToLobby,
 
         {/* Buttons */}
         <div className="space-y-3 slide-up-4">
-          <Button onClick={onReturnToLobby} className="w-full h-12 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-green-500/25">
+          <Button onClick={onPlayAgain} className="w-full h-12 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-green-500/25">
             <RotateCcw className="h-4 w-4 mr-2" />
             Play Again
           </Button>

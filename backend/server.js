@@ -604,7 +604,7 @@ io.on('connection', (socket) => {
   socket.on('createGame', ({ playerName }, callback) => {
     const gameCode = Math.random().toString(36).substring(2, 6).toUpperCase();
     games[gameCode] = {
-      players: [{ id: socket.id, name: playerName, isHost: true, extraCards: 0, isDealer: true }],
+      players: [{ id: socket.id, name: playerName, isHost: true, extraCards: 0, isDealer: true, readyForNextGame: true }],
     };
     socket.join(gameCode);
     callback({ gameCode, players: games[gameCode].players });
@@ -626,11 +626,28 @@ io.on('connection', (socket) => {
 
     // Prevent duplicate players
     if (!game.players.some(p => p.id === socket.id)) {
-      game.players.push({ id: socket.id, name: playerName, isHost: false, extraCards: 0, isDealer: false });
+      game.players.push({ id: socket.id, name: playerName, isHost: false, extraCards: 0, isDealer: false, readyForNextGame: false });
     }
+
+    // If no current host (e.g., new round lobby), make this joining player the host
+    if (!game.players.some(p => p.isHost)) {
+      game.players.forEach(p => p.isHost = (p.id === socket.id));
+    }
+
+    // If player becomes host or joins lobby after game over, mark ready flag accordingly
+    const meJoin = game.players.find(p => p.id === socket.id);
+    if (meJoin) meJoin.readyForNextGame = true;
+
     socket.join(gameCode);
-    callback({ gameCode, players: game.players });
-    io.to(gameCode).emit('playerList', game.players);
+
+    if (game.state && game.state.gameOver) {
+      const readyPlayers = game.players.filter(p => p.readyForNextGame);
+      callback({ gameCode, players: readyPlayers });
+      io.to(gameCode).emit('playerList', readyPlayers);
+    } else {
+      callback({ gameCode, players: game.players });
+      io.to(gameCode).emit('playerList', game.players);
+    }
     // If the game has already started, send the current game state to the new player
     if (game.state && !game.state.gameOver) {
       socket.emit('gameState', game.state);
@@ -648,6 +665,14 @@ io.on('connection', (socket) => {
 
       // Remove player
       game.players.splice(playerIdx, 1);
+
+      // If the removed player was host, randomly assign a new host from remaining players
+      if (removedPlayer.isHost && game.players.length > 0) {
+        const randIdx = Math.floor(Math.random() * game.players.length);
+        game.players.forEach(p => p.isHost = false);
+        game.players[randIdx].isHost = true;
+      }
+
       if (game.state) {
         game.state.players = game.state.players.filter(p => p.id !== removedId);
         if (game.state.playerCards) {
@@ -716,6 +741,10 @@ io.on('connection', (socket) => {
             name: p.name,
             cardCount: (game.state.playerCards && game.state.playerCards[p.id]?.length) || (p.extraCards || 0) + 2,
           })).sort((a, b) => a.cardCount - b.cardCount);
+
+          // Clear existing host so lobby restarts with no host
+          game.players.forEach(pl => { pl.isHost = false; pl.readyForNextGame = false; });
+
           ranking.forEach((p, idx) => { p.placement = idx + 1 });
 
           game.state.gameOver = true;
@@ -748,6 +777,7 @@ io.on('connection', (socket) => {
       p.isActive = true;
       p.extraCards = 0;
       p.isDealer = false;
+      p.readyForNextGame = false;
     });
 
     // Clear the previous game's state before starting a new one.
@@ -758,6 +788,24 @@ io.on('connection', (socket) => {
     dealNewRound(game);
     io.to(gameCode).emit('gameState', game.state);
     io.to(gameCode).emit('playerList', game.players);
+  });
+
+  // Claim host for the next game lobby
+  socket.on('claimHost', ({ gameCode }) => {
+    const game = games[gameCode];
+    if (!game) return;
+
+    // Mark this player ready for next game
+    const me = game.players.find(p => p.id === socket.id);
+    if (me) me.readyForNextGame = true;
+
+    // Assign host only if none exists
+    if (!game.players.some(p => p.isHost)) {
+      game.players.forEach(p => p.isHost = (p.id === socket.id));
+    }
+
+    const readyPlayers = game.players.filter(p => p.readyForNextGame);
+    io.to(gameCode).emit('playerList', readyPlayers);
   });
 
   // Helper to get next active player
@@ -918,11 +966,28 @@ io.on('connection', (socket) => {
       if (activePlayers.length <= 1) {
         // Build ranking list based on remaining card counts
         const getPlayerCardCount = (pId) => game.state.playerCards[pId]?.length || 0;
-        const ranking = game.players.map(p => ({
-          id: p.id,
-          name: p.name,
-          cardCount: getPlayerCardCount(p.id) + (p.extraCards || 0)
-        })).sort((a,b)=>a.cardCount-b.cardCount);
+        const loserId = game.state.bsReveal.loser;
+
+        // Clear existing host so lobby can restart with no host
+        game.players.forEach(pl => { pl.isHost = false; pl.readyForNextGame = false; });
+
+        const ranking = game.players.map(p => {
+          // If a player is marked as inactive, it means they were just eliminated.
+          const cardCount = p.isActive === false ? 6 : getPlayerCardCount(p.id);
+          return {
+            id: p.id,
+            name: p.name,
+            cardCount: cardCount,
+          };
+        }).sort((a,b)=>{
+          if (a.cardCount !== b.cardCount) {
+            return a.cardCount - b.cardCount;
+          }
+          // If card counts are equal, the loser of the last round gets a lower rank
+          if (a.id === loserId) return 1;
+          if (b.id === loserId) return -1;
+          return 0;
+        });
         ranking.forEach((p,idx)=>{ p.placement = idx+1 });
 
         game.state.gameOver = true;

@@ -108,7 +108,7 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
   const handleReturnToLobby = () => onReturnToLobby && onReturnToLobby()
 
   if(endPlayers){
-    return <GameEndScreen players={endPlayers} gameCode={gameCode} onPlayAgain={()=>{socket?.emit('startGame',{gameCode})}} onReturnToLobby={handleReturnToLobby} onReturnHome={handleLeaveGame} />
+    return <GameEndScreen players={endPlayers} gameCode={gameCode} onPlayAgain={()=>{socket?.emit('claimHost',{gameCode});handleReturnToLobby();}} onReturnToLobby={handleReturnToLobby} onReturnHome={handleLeaveGame} />
   }
 
   if (!gameState) {
