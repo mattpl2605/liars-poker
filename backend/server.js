@@ -25,7 +25,7 @@ const corsOriginFn = (origin, callback) => {
   return callback(new Error('Not allowed by CORS'));
 };
 
-/* 2️⃣  Socket.IO CORS */
+/* Socket.IO CORS */
 const io = new Server(server, {
   cors: {
     origin: "*", // Temporarily allow all origins for debugging
@@ -35,7 +35,7 @@ const io = new Server(server, {
   }
 });
 
-/* 3️⃣  Express CORS (for GET / health-check) */
+/*  Express CORS (for GET / health-check) */
 app.use(
   cors({
     origin: corsOriginFn,
@@ -171,7 +171,7 @@ function parseClaimString(str) {
       return { category: 'full_house', rank: rankFromWord(match[1]), pairRank: rankFromWord(match[2]) };
     }
   }
-  // Handle "Two Pair" BEFORE generic "Pair" to avoid false matches for strings
+  // Handle "Two Pair" before generic "Pair" to avoid false matches for strings
   // like "Two Pair of 7s and 6s" which also contain "pair of".
   if (lc.includes('two pair')) {
     const match = str.match(/Two Pair of ([0-9A-Za-z]+)s and ([0-9A-Za-z]+)s/i);
@@ -184,7 +184,7 @@ function parseClaimString(str) {
     }
     return { category: 'two_pair', rank: null, secondRank: null };
   }
-  // Generic "Pair" (must come AFTER the two-pair branch above)
+  // Generic "Pair" 
   if (lc.includes('pair of')) {
     const rank = rankFromWord(str.split('Pair of ')[1]);
     return { category: 'pair', rank };
@@ -987,7 +987,7 @@ app.get('/socket.io/', (req, res) => {
   res.json({ status: 'Socket.IO server is running' });
 });
 
-// tell Node to bind on **all** interfaces
+// tell Node to bind on all interfaces
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 }); 
