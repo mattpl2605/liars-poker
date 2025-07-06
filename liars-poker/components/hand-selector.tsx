@@ -239,7 +239,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
         max={availableHands.length - 1}
         value={selectedHandIndex}
         onChange={handleSetSelectedHand}
-        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider border border-gray-600"
         />
     </div>
 
@@ -413,7 +413,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
             max={SUITS.length - 1}
             value={selectedSuitIndex}
             onChange={(e) => setSelectedSuitIndex(parseInt(e.target.value, 10))}
-            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider border border-gray-600"
         />
         </div>
     )}

@@ -63,9 +63,9 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
   useEffect(() => {
     if (!socket || !gameState || !gameState.gameStarted) return;
 
-    // Only host triggers reveal, and only during the flop phase (gameRound === 0)
+    // Only host triggers reveal
     const me = gameState.players.find((p: Player) => p.id === socket?.id) || gameState.players.find((p: Player) => p.name === playerName);
-    if (!me?.isHost || gameState.gameRound !== 0) return;
+    if (!me?.isHost) return;
 
     const revealedCount = gameState.revealedCards.filter(Boolean).length;
     if (revealedCount >= 3) return; // flop already done
@@ -75,7 +75,7 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [socket, gameState?.revealedCards, gameState?.gameRound, gameState?.gameStarted, gameCode, playerName]);
+  }, [socket, gameState?.revealedCards, gameState?.gameStarted, gameCode, playerName]);
 
   const handleStartGame = () => {
     if (socket) socket.emit("startGame", { gameCode })
@@ -157,7 +157,7 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
         <div className={`flex justify-center gap-6 mb-10`}>
           {gameState.players.map((player: Player) => (
             <div key={player.id} className="text-center">
-              <div className="relative">
+              <div className="relative mb-2 w-10 h-10 mx-auto">
                 {(() => {
                   const cardCount = gameState.playerCards[player.id]?.length || player.cardCount || 0;
                   const eliminated = cardCount >= 6 || player.isActive === false;
@@ -172,7 +172,7 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
                   
                   return (
                     <div
-                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${baseClass} ${extraClass} flex items-center justify-center text-white text-base font-bold mb-2 transition-all duration-300`}
+                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${baseClass} ${extraClass} flex items-center justify-center text-white text-base font-bold transition-all duration-300`}
                     >
                       {player.name.charAt(0).toUpperCase()}
                     </div>
@@ -183,11 +183,18 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
                     D
                   </div>
                 )}
-                {gameState.playerCards[player.id] && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-600 rounded-full flex items-center justify-center text-xs font-bold">
-                    {gameState.playerCards[player.id]?.length}
-                  </div>
-                )}
+                {(() => {
+                  const cardCount = gameState.playerCards[player.id]?.length || player.cardCount || 0;
+                  const eliminated = cardCount >= 6 || player.isActive === false;
+                  if (!eliminated && gameState.playerCards[player.id]) {
+                    return (
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-600 rounded-full flex items-center justify-center text-xs font-bold">
+                        {gameState.playerCards[player.id]?.length}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div className="text-xs text-gray-400 mt-1">{player.name}</div>
             </div>

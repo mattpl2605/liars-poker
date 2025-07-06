@@ -61,11 +61,6 @@ export function GameLobby({ gameCode, playerName, isHost, onStartGame, players, 
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold text-xl mx-auto">
                     {player.name.charAt(0).toUpperCase()}
                   </div>
-                  {player.isHost && (
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-600 rounded-full flex items-center justify-center text-xs font-bold">
-                      H
-                    </div>
-                  )}
                 </div>
                 <div className="text-white font-medium">{player.name}</div>
                 {player.isHost && <div className="text-yellow-400 text-xs mt-1">Host</div>}

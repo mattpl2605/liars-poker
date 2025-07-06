@@ -51,6 +51,7 @@ export default function Home() {
     socket.emit("createGame", { playerName }, (res: any) => {
       if (res.error) {
         setError(res.error)
+        setTimeout(() => setError(""), 5000)
         return
       }
       setGameCode(res.gameCode)
@@ -68,6 +69,7 @@ export default function Home() {
     socket.emit("joinGame", { gameCode, playerName }, (res: any) => {
       if (res.error) {
         setError(res.error)
+        setTimeout(() => setError(""), 5000)
         return
       }
       setGameCode(res.gameCode)
@@ -139,6 +141,8 @@ export default function Home() {
               />
             </div>
           </div>
+
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
           {/* Action buttons */}
           <div className="flex gap-6 justify-center">

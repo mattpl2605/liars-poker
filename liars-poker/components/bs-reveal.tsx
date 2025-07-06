@@ -225,7 +225,7 @@ export function BSReveal({ players, communityCards, revealedBoardFlags, currentC
         <Card className="bg-black border-0">
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-white">BS Called!</CardTitle>
-            <p className="text-sm text-gray-400">Revealing all cards...</p>
+            <p className="text-sm text-gray-400">{showResult ? "Revealed all cards!" : "Revealing all cards..."}</p>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Community Cards */}

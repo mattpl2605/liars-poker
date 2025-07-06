@@ -3,12 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
-/* 1️⃣  FRONT-END ORIGIN
-   -------------------------------------------------
-   • in production you'll set FRONTEND_ORIGIN
-     on Railway → Variables (value = your Vercel URL)
-   • when you run locally it falls back to localhost:3000
-*/
+
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 
@@ -560,21 +555,36 @@ function dealNewRound(game) {
   const deck = shuffle(createDeck());
   const communityCards = deck.splice(0, 5);
   const playerCards = {};
+  
+  const activePlayers = game.players.filter(p => p.isActive !== false);
 
-  // Only active players (isActive !== false) receive new cards
-  game.players.forEach((p) => {
-    if (p.isActive === false) {
-      // Explicitly set empty array for clarity / UI
-      playerCards[p.id] = [];
-      return;
-    }
-    const handSize = 2 + (p.extraCards || 0);
-    playerCards[p.id] = deck.splice(0, handSize);
+  // Dealer assignment for the very first round of a new game.
+  if (!game.state || game.state.gameRound === undefined) {
+    game.players.forEach(p => p.isDealer = false);
+    if(activePlayers.length > 0) activePlayers[0].isDealer = true;
+  }
+  
+  // Card distribution
+  activePlayers.forEach(p => {
+    const cardCount = 2 + (p.extraCards || 0);
+    playerCards[p.id] = deck.splice(0, cardCount);
   });
-  const dealer = game.players.find(p => p.isDealer) || game.players[0];
-  const currentTurn = dealer.id;
+  // Inactive players have their hands cleared for UI purposes
+  game.players.filter(p => p.isActive === false).forEach(p => {
+    playerCards[p.id] = [];
+  });
+
+  const dealer = game.players.find(p => p.isDealer);
+  const dealerIndex = activePlayers.findIndex(p => p.id === dealer?.id);
+  
+  // The player to the left of the dealer starts.
+  // This logic correctly wraps around the list of *active* players.
+  const turnIndex = dealerIndex !== -1 ? dealerIndex : 0;
+  const currentTurn = activePlayers[turnIndex]?.id;
+
   game.state = {
     players: game.players,
+    deck,
     communityCards,
     playerCards,
     currentClaim: null,
@@ -584,7 +594,8 @@ function dealNewRound(game) {
     phase: 'playing',
     revealedCards: [false, false, false, false, false],
     gameStarted: true,
-    gameRound: 0,
+    gameRound: (game.state?.gameRound ?? -1) + 1,
+    bsReveal: null,
   };
 }
 
@@ -608,7 +619,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (game.state && game.state.gameStarted) {
+    if (game.state && game.state.gameStarted && !game.state.gameOver) {
       callback({ error: 'Game is already in progress.' });
       return;
     }
@@ -621,7 +632,7 @@ io.on('connection', (socket) => {
     callback({ gameCode, players: game.players });
     io.to(gameCode).emit('playerList', game.players);
     // If the game has already started, send the current game state to the new player
-    if (game.state) {
+    if (game.state && !game.state.gameOver) {
       socket.emit('gameState', game.state);
     }
   });
@@ -652,6 +663,12 @@ io.on('connection', (socket) => {
 
       // If game is running
       if (game.state) {
+        if (game.state.gameOver) {
+          // Game is over, just update player list but do not re-evaluate game state.
+          io.to(code).emit('playerList', game.players);
+          return;
+        }
+
         // Advance turn if the disconnected player was up
         if (game.state.currentTurn === removedId) {
           const nextPlayerId = getNextActivePlayer(game, removedId, playerIdx);
@@ -701,6 +718,7 @@ io.on('connection', (socket) => {
           })).sort((a, b) => a.cardCount - b.cardCount);
           ranking.forEach((p, idx) => { p.placement = idx + 1 });
 
+          game.state.gameOver = true;
           io.to(code).emit('gameEnded', { players: ranking, gameCode: code });
           // Don't delete game state, allows viewing final board
         } else {
@@ -725,9 +743,21 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Reset all player states for a completely new game
+    game.players.forEach(p => {
+      p.isActive = true;
+      p.extraCards = 0;
+      p.isDealer = false;
+    });
+
+    // Clear the previous game's state before starting a new one.
+    // This is crucial for dealNewRound to correctly identify the first round.
+    game.state = undefined;
+
     // Setup game state
     dealNewRound(game);
     io.to(gameCode).emit('gameState', game.state);
+    io.to(gameCode).emit('playerList', game.players);
   });
 
   // Helper to get next active player
@@ -838,7 +868,7 @@ io.on('connection', (socket) => {
 
     // Set new dealer to the loser (they start next round)
     if (loserId) {
-      game.players = game.players.map(p => ({ ...p, isDealer: p.id === loserId }));
+      game.players.forEach(p => p.isDealer = p.id === loserId);
     }
 
     game.state.bsReveal = {
@@ -864,9 +894,6 @@ io.on('connection', (socket) => {
     const revealedCount = game.state.revealedCards.filter(Boolean).length;
     if (revealedCount < 3) { // Only for the flop
       game.state.revealedCards[revealedCount] = true;
-      if (revealedCount + 1 === 3) {
-        game.state.gameRound = 1; // Flop complete
-      }
       io.to(gameCode).emit('gameState', game.state);
     }
   });
@@ -891,16 +918,47 @@ io.on('connection', (socket) => {
       if (activePlayers.length <= 1) {
         // Build ranking list based on remaining card counts
         const getPlayerCardCount = (pId) => game.state.playerCards[pId]?.length || 0;
-        const ranking = game.state.players.map(p => ({
+        const ranking = game.players.map(p => ({
           id: p.id,
           name: p.name,
-          cardCount: getPlayerCardCount(p.id)
+          cardCount: getPlayerCardCount(p.id) + (p.extraCards || 0)
         })).sort((a,b)=>a.cardCount-b.cardCount);
         ranking.forEach((p,idx)=>{ p.placement = idx+1 });
 
+        game.state.gameOver = true;
         io.to(gameCode).emit('gameEnded', { players: ranking, gameCode });
-        delete game.state;
+        // DO NOT delete game state, allows for a 'play again' feature
         return;
+      }
+
+      const loserId = game.state.bsReveal.loser;
+      const loserPlayer = game.players.find(p => p.id === loserId);
+
+      if (loserPlayer) {
+        if (loserPlayer.isActive === false) {
+          // Player was eliminated, dealer goes to the NEXT active player
+          const loserIdx = game.players.findIndex(p => p.id === loserId);
+          let nextDealerId = null;
+          if (loserIdx !== -1) {
+            for (let i = 1; i <= game.players.length; i++) {
+              const nextIdx = (loserIdx + i) % game.players.length;
+              const potentialDealer = game.players[nextIdx];
+              if (potentialDealer.isActive !== false) {
+                nextDealerId = potentialDealer.id;
+                break;
+              }
+            }
+          }
+          if (nextDealerId) {
+            game.players.forEach(p => p.isDealer = (p.id === nextDealerId));
+          } else if (activePlayers.length > 0) {
+            // Fallback if no next active player is found (e.g. one player left)
+            activePlayers[0].isDealer = true;
+          }
+        } else {
+          // Player was not eliminated, the loser becomes the dealer
+          game.players.forEach(p => p.isDealer = (p.id === loserId));
+        }
       }
 
       delete game.state.continues;
