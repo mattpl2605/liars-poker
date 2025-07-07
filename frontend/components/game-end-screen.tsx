@@ -102,12 +102,12 @@ export function GameEndScreen({ players, gameCode, onPlayAgain, onReturnToLobby,
 
         {/* Buttons */}
         <div className="space-y-3 slide-up-4">
-          <Button onClick={onPlayAgain} className="w-full h-12 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-green-500/25">
+          <Button onClick={onPlayAgain} className="w-full h-12 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-green-500/25 rounded-full">
             <RotateCcw className="h-4 w-4 mr-2" />
-            Play Again
+            play again
           </Button>
-            <Button onClick={onReturnHome} className="w-full h-12 rounded-xl bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-gray-500/25">
-              <Home className="h-4 w-4 mr-2" />Home
+            <Button onClick={onReturnHome} className="w-full h-12 rounded-xl bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-gray-500/25 rounded-full">
+              <Home className="h-4 w-4 mr-2" />home
             </Button>
         </div>
       </div>
