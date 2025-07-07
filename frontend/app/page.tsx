@@ -134,7 +134,7 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <Input
-                placeholder="enter 4-letter code"
+                placeholder="enter game code"
                 value={gameCode}
                 onChange={(e) => setGameCode(e.target.value.toUpperCase())}
                 className="bg-transparent border-b-2 border-gray-600 border-t-0 border-l-0 border-r-0 rounded-none text-center text-white placeholder-gray-500 text-lg py-3 focus:border-white"
