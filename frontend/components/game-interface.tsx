@@ -125,10 +125,15 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
     return count < 6 && p.isActive !== false;
   });
 
+  // Include the loser on BS screen even if they were just eliminated this round
+  const loserId = gameState.bsReveal?.loser;
+  const additionalPlayers: Player[] = loserId ? gameState.players.filter(p => p.id === loserId) : [];
+  const playersForBS = [...activePlayers, ...additionalPlayers].filter((v,i,a)=>a.findIndex(p=>p.id===v.id)===i);
+
   if (gameState?.phase === "bs-reveal" && gameState.bsReveal) {
     return (
       <BSReveal
-        players={gameState.players as Player[]}
+        players={playersForBS as Player[]}
         communityCards={gameState.bsReveal.communityCards}
         currentClaim={gameState.bsReveal.claim}
         revealedPlayerCards={gameState.bsReveal.revealedPlayerCards}

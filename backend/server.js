@@ -561,9 +561,11 @@ function dealNewRound(game) {
   const activePlayers = game.players.filter(p => p.isActive !== false);
 
   // Dealer assignment for the very first round of a new game.
-  if (!game.state || game.state.gameRound === undefined) {
+  // If no dealer is currently marked (e.g., very first round), assign it to the first active player.
+  const currentDealerExists = game.players.some(p => p.isDealer);
+  if (!currentDealerExists) {
     game.players.forEach(p => p.isDealer = false);
-    if(activePlayers.length > 0) activePlayers[0].isDealer = true;
+    if (activePlayers.length > 0) activePlayers[0].isDealer = true;
   }
   
   // Card distribution
@@ -571,9 +573,15 @@ function dealNewRound(game) {
     const cardCount = 2 + (p.extraCards || 0);
     playerCards[p.id] = deck.splice(0, cardCount);
   });
-  // Inactive players have their hands cleared for UI purposes
-  game.players.filter(p => p.isActive === false).forEach(p => {
-    playerCards[p.id] = [];
+  // Do not deal any cards to eliminated players; they remain as spectators.
+
+  // Update each player's displayed card count for the client.
+  game.players.forEach(p => {
+    if (p.isActive === false) {
+      p.cardCount = 6; // Spectators always show 6 cards
+    } else {
+      p.cardCount = playerCards[p.id]?.length || ((p.extraCards || 0) + 2);
+    }
   });
 
   const dealer = game.players.find(p => p.isDealer);
@@ -817,7 +825,9 @@ io.on('connection', (socket) => {
     
     if (players.length === 0) return null;
 
-    const activePlayers = players.filter(p => getPlayerCardCount(p.id) < 6);
+    const activePlayers = players.filter(
+      p => p.isActive !== false && getPlayerCardCount(p.id) < 6
+    );
     if (activePlayers.length === 0) return null;
     if (activePlayers.length === 1) return activePlayers[0].id;
 
@@ -833,7 +843,7 @@ io.on('connection', (socket) => {
     for (let i = 1; i <= players.length; i++) {
       const pIdx = (startIdx + i + players.length) % players.length;
       const player = players[pIdx];
-      if (getPlayerCardCount(player.id) < 6) {
+      if (getPlayerCardCount(player.id) < 6 && player.isActive !== false) {
         return player.id;
       }
     }
@@ -866,7 +876,7 @@ io.on('connection', (socket) => {
     // Check for full rotation to reveal next card (Turn/River)
     if (game.state.currentTurn === game.state.roundStarter) {
       const round = game.state.gameRound;
-      if (round === 1 || round === 2) { // Reveal Turn or River
+      if (round === 0 || round === 1) { // Reveal Turn (0) or River (1)
         const revealedCount = game.state.revealedCards.filter(Boolean).length;
         if (revealedCount < 5) {
           game.state.revealedCards[revealedCount] = true;
@@ -986,8 +996,8 @@ io.on('connection', (socket) => {
             return a.cardCount - b.cardCount;
           }
           // If card counts are equal, the loser of the last round gets a lower rank
-          if (a.id === loserId) return 1;
-          if (b.id === loserId) return -1;
+          if (a.id === loserId) return -1;
+          if (b.id === loserId) return 1;
           return 0;
         });
         ranking.forEach((p,idx)=>{ p.placement = idx+1 });
@@ -1029,6 +1039,8 @@ io.on('connection', (socket) => {
       }
 
       delete game.state.continues;
+      // Reset state so the new round starts with gameRound = 0 (allows Turn/River reveals again)
+      game.state = undefined;
       dealNewRound(game);
       io.to(gameCode).emit('gameState', game.state);
     }
