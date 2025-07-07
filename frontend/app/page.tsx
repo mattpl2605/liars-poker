@@ -172,7 +172,7 @@ export default function Home() {
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-red-400 text-lg">🎯</span>
-                <span className="text-gray-300">claim poker hands higher than the previous player</span>
+                <span className="text-gray-300">claim poker hands higher than the last player using the board and player cards</span>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-green-400 text-lg">🔄</span>

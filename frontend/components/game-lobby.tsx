@@ -90,7 +90,7 @@ export function GameLobby({ gameCode, playerName, isHost, onStartGame, players, 
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-red-400">•</span>
-                <span className="text-gray-300">Claim poker hands higher than the previous player</span>
+                <span className="text-gray-300">claim poker hands higher than the last player using the board and player cards</span>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-green-400">•</span>
