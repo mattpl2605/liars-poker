@@ -4,10 +4,11 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
-
-/* ------------------------------------------------- */
+const ALLOWED_ORIGINS = [
+  'https://liars-poker-dusky.vercel.app',
+  'https://liarspoker.live'
+];
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
 
 const app = express();
 const server = http.createServer(app);
@@ -17,8 +18,9 @@ const corsOriginFn = (origin, callback) => {
   // Allow requests with no origin (like mobile apps or curl)
   if (!origin) return callback(null, true);
   const allowed =
-    origin === FRONTEND_ORIGIN || // explicit env origin
-    /\.vercel\.app$/.test(origin); // any Vercel preview/production domain
+    ALLOWED_ORIGINS.includes(origin) || // our two domains
+    origin === FRONTEND_ORIGIN ||       // optional env override
+    /\.vercel\.app$/.test(origin);     // any Vercel preview domain
   if (allowed) {
     return callback(null, true);
   }
