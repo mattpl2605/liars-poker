@@ -117,7 +117,7 @@ export function GameLobby({ gameCode, playerName, isHost, onStartGame, players, 
                 className="px-12 py-4 text-lg font-semibold bg-green-600 hover:bg-green-700 rounded-full"
               >
                 <Play className="h-5 w-5 mr-2" />
-                Start Game
+                start game
               </Button>
             ) : (
               <div className="text-gray-400 text-lg">Need at least 2 players to start</div>

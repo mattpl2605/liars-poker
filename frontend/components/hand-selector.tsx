@@ -102,6 +102,13 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
       return list
     }
 
+    if (selectedHand === "Straight Flush") {
+      const baseListAll = RANKS.filter(r => r !== "A");
+      if (!currentClaim || currentClaimParsed.hand !== selectedHand) {
+        return applyMinCap([...baseListAll]);
+      }
+    }
+
     if (!selectedHand || !currentClaim || currentClaimParsed.hand !== selectedHand) {
       return applyMinCap([...RANKS])
     }
@@ -122,9 +129,11 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
         return applyMinCap(RANKS.filter(rank => getRankValue(rank) > getRankValue(currentClaimParsed.rank)))
     }
     if (selectedHand === "Straight Flush") {
-        if (!currentClaimParsed.rank) return applyMinCap([...RANKS])
+        // Exclude Ace since Ace-high straight flush == Royal Flush
+        const baseList = RANKS.filter(r => r !== "A")
+        if (!currentClaimParsed.rank) return applyMinCap([...baseList])
         // Lower straight flush beats higher straight flush
-        return applyMinCap(RANKS.filter(rank => getRankValue(rank) < getRankValue(currentClaimParsed.rank)))
+        return applyMinCap(baseList.filter(rank => getRankValue(rank) < getRankValue(currentClaimParsed.rank)))
     }
 
     if (selectedHand === "Full House") {
@@ -136,7 +145,12 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
     return RANKS.filter(rank => getRankValue(rank) > getRankValue(currentClaimParsed.rank))
   })()
 
-  const selectedRank = availableRanks[selectedRankIndex]
+  // For Straight Flush, completely remove Ace option (Ace-high is Royal Flush)
+  const filteredAvailableRanks = selectedHand === "Straight Flush" ? availableRanks.filter(r => r !== "A") : availableRanks;
+
+  const effectiveAvailableRanks = filteredAvailableRanks;
+
+  const selectedRank = effectiveAvailableRanks[selectedRankIndex]
 
   const availableSecondRanks = (() => {
     if(!selectedHand) return []
@@ -207,7 +221,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
 
   const handleSetSelectedRank = (e: React.ChangeEvent<HTMLInputElement>) => {
       const index = parseInt(e.target.value, 10);
-      if(index < availableRanks.length) {
+      if(index < effectiveAvailableRanks.length) {
         setSelectedRankIndex(index);
       }
   }
@@ -261,7 +275,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
 
             <div className="grid grid-cols-7 gap-1 mb-2">
             {(isReverseRanking ? [...RANKS].reverse() : RANKS).map((rank) => {
-                const isAvailable = availableRanks.includes(rank)
+                const isAvailable = effectiveAvailableRanks.includes(rank)
                 const isCurrent = currentClaimParsed.rank === rank && currentClaimParsed.hand === selectedHand
                 const isSelected = selectedRank === rank
 
@@ -277,7 +291,7 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
                             ? "bg-green-600 text-white cursor-pointer hover:bg-green-500"
                             : "bg-gray-700 text-gray-500"
                     }`}
-                    onClick={() => isAvailable && setSelectedRankIndex(availableRanks.indexOf(rank))}
+                    onClick={() => isAvailable && setSelectedRankIndex(effectiveAvailableRanks.indexOf(rank))}
                 >
                     {rank}
                 </div>
@@ -427,9 +441,9 @@ export function HandSelector({ onCancel, onSubmit, currentClaim }: HandSelectorP
             (needsSecondRank && !selectedSecondRank) ||
             (needsSuit && !selectedSuit)
         }
-        className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full h-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-base transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
         >
-            Make Claim
+            make claim
         </Button>
     </div>
     </div>

@@ -236,15 +236,15 @@ export function GameInterface({ socket, playerName, gameCode, onLeaveGame, onRet
               {isMyTurn && gameState.phase === "playing" && !meEliminated && (
                 gameState.currentClaim ? (
                   <>
-                    <Button onClick={handleRaise} className="bg-blue-600 hover:bg-blue-700">Raise</Button>
-                    <Button onClick={handleBS} className="bg-red-600 hover:red-700">Call BS</Button>
+                    <Button onClick={handleRaise} className="bg-blue-600 hover:bg-blue-700 rounded-full">raise</Button>
+                    <Button onClick={handleBS} className="bg-red-600 hover:red-700 rounded-full">call bs</Button>
                   </>
                 ) : (
-                  <Button onClick={handleRaise} className="bg-blue-600 hover:bg-blue-700">Call</Button>
+                  <Button onClick={handleRaise} className="bg-blue-600 hover:bg-blue-700 rounded-full">call</Button>
                 )
               )}
               {me?.isHost && !gameState.gameStarted && (
-                <Button onClick={handleStartGame} className="bg-green-600 hover:bg-green-700">Start Game</Button>
+                <Button onClick={handleStartGame} className="bg-green-600 hover:bg-green-700 rounded-full">start game</Button>
               )}
             </>
           )}

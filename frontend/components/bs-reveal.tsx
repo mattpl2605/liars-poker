@@ -296,10 +296,10 @@ export function BSReveal({ players, communityCards, revealedBoardFlags, currentC
                   <Button
                     onClick={handleContinue}
                     size="lg"
-                    className={`mt-4 ${readyClicked ? "bg-gray-600" : "bg-green-600 hover:bg-green-700"}`}
+                    className={`mt-4 ${readyClicked ? "bg-gray-600 rounded-full" : "bg-green-600 hover:bg-green-700 rounded-full"}`}
                     disabled={readyClicked}
                   >
-                    Ready
+                    ready
                   </Button>
                 )}
               </div>
